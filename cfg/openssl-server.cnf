@@ -1,0 +1,43 @@
+HOME            = .
+
+####################################################################
+[ req ]
+default_bits       = 4096
+default_keyfile    = serverkey.pem
+distinguished_name = server_distinguished_name
+req_extensions     = server_req_extensions
+string_mask        = utf8only
+
+####################################################################
+[ server_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_default             = DE
+countryName_min                 = 2
+countryName_max                 = 2
+
+stateOrProvinceName             = State or Province Name (full name)
+stateOrProvinceName_default     = Berlin
+
+localityName                    = Locality Name (eg, city)
+localityName_default            = Berlin
+
+0.organizationName              = Organization Name (eg, company)
+0.organizationName_default      = bln.space
+
+organizationalUnitName          = Organizational Unit Name (eg, section)
+organizationalUnitName_default  = Docker Services
+
+commonName                      = Server Name or FQDN
+commonName_default              = server
+
+emailAddress                    = Email Address
+emailAddress_default            = postmaster@bln.space
+
+####################################################################
+[ server_req_extensions ]
+
+subjectKeyIdentifier            = hash
+basicConstraints                = CA:FALSE
+keyUsage                        = digitalSignature, keyEncipherment
+# subjectAltName                  = @alternate_names
+nsComment                       = "OpenSSL Generated Certificate"

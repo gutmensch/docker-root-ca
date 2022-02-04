@@ -1,0 +1,151 @@
+HOME			= .
+
+oid_section		= new_oids
+
+[ new_oids ]
+
+tsa_policy1 = 1.2.3.4.1
+tsa_policy2 = 1.2.3.4.5.6
+tsa_policy3 = 1.2.3.4.5.7
+
+####################################################################
+[ ca ]
+default_ca	= CA_default		# The default ca section
+
+####################################################################
+[ CA_default ]
+
+dir		= $ENV::CA_DIR		# Where everything is kept
+certs		= $dir/certs		# Where the issued certs are kept
+crl_dir		= $dir/crl		# Where the issued crl are kept
+database	= $dir/index.txt	# database index file.
+unique_subject	= no			# Set to 'no' to allow creation of
+					# several certs with same subject.
+new_certs_dir	= $dir/newcerts		# default place for new certs.
+
+certificate	= $dir/certs/$ENV::CA_NAME.crt 	# The CA certificate
+serial		= $dir/serial 		# The current serial number
+crlnumber	= $dir/crlnumber	# the current crl number
+					# must be commented out to leave a V1 CRL
+crl		= $dir/crl.pem 		# The current CRL
+private_key	= $dir/private/$ENV::CA_NAME.key # The private key
+
+x509_extensions	= usr_cert		# The extensions to add to the cert
+
+# Comment out the following two lines for the "traditional"
+# (and highly broken) format.
+name_opt 	= ca_default		# Subject Name options
+cert_opt 	= ca_default		# Certificate field options
+
+# Extension copying option: use with caution.
+copy_extensions = copy
+email_in_dn = no
+# crl_extensions	= crl_ext
+
+default_days	= 720
+default_crl_days= 30			# how long before next CRL
+default_md	= sha256 		# use public key default MD
+preserve	= no			# keep passed DN ordering
+
+policy		= policy_match
+
+# For the CA policy
+[ policy_match ]
+countryName		= match
+stateOrProvinceName	= match
+organizationName	= match
+organizationalUnitName	= optional
+commonName		= optional
+emailAddress		= optional
+
+[ policy_server ]
+countryName		= optional
+stateOrProvinceName	= optional
+localityName		= optional
+organizationName	= match
+organizationalUnitName	= match
+commonName		= supplied
+emailAddress		= optional
+
+####################################################################
+[ req ]
+default_bits		= 4096
+default_keyfile 	= cakey.pem
+distinguished_name	= req_distinguished_name
+attributes              = req_attributes
+x509_extensions	        = v3_ca
+input_password          = $ENV::CA_PASSWORD
+output_password         = $ENV::CA_PASSWORD
+string_mask             = utf8only
+
+# req_extensions = v3_req # The extensions to add to a certificate request
+
+[ req_distinguished_name ]
+countryName			= Country Name (2 letter code)
+countryName_default		= DE
+countryName_min			= 2
+countryName_max			= 2
+
+stateOrProvinceName		= State or Province Name (full name)
+stateOrProvinceName_default	= Berlin
+
+localityName			= Locality Name (eg, city)
+localityName_default		= Berlin
+
+0.organizationName		= Organization Name (eg, company)
+0.organizationName_default	= bln.space
+
+organizationalUnitName		= Organizational Unit Name (eg, section)
+organizationalUnitName_default	= Docker Services
+
+commonName			= Signing CA
+commonName_default		= Local Root CA
+commonName_max			= 64
+
+emailAddress			= Contact E-Mail Address
+emailAddress_default		= postmaster@bln.space
+emailAddress_max		= 64
+
+# SET-ex3			= SET extension number 3
+
+[ req_attributes ]
+challengePassword		= A challenge password
+challengePassword_min		= 4
+challengePassword_max		= 20
+
+unstructuredName		= An optional company name
+
+[ v3_req ]
+
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = email:move
+crlDistributionPoints = URI:http://front/$ENV::CA_NAME/ca.crl
+
+[ v3_ca ]
+
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+basicConstraints = critical,CA:true
+subjectAltName=email:move
+crlDistributionPoints = URI:http://front/$ENV::CA_NAME/ca.crl
+keyUsage = keyCertSign, cRLSign
+
+[ v3_ca_has_san ]
+
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+basicConstraints = critical,CA:true
+crlDistributionPoints = URI:http://front/$ENV::CA_NAME/ca.crl
+keyUsage = keyCertSign, cRLSign
+
+[ crl_ext ]
+
+authorityKeyIdentifier=keyid:always
+
+[ signing_req ]
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid,issuer
+basicConstraints       = CA:FALSE
+keyUsage               = digitalSignature, keyEncipherment
+crlDistributionPoints = URI:http://front/$ENV::CA_NAME/ca.crl
