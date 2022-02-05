@@ -59,7 +59,7 @@ def pipeline() {
     // https://docs.cloudbees.com/docs/admin-resources/latest/plugins/docker-workflow
     stage('build image') {
         DOCKER_IMAGE_NAME = "${DOCKER_REGISTRY}/${getDockerImage()}:${getDockerTag()}"
-	withCredentials([secret(credentialsId: 'docker-root-ca-password', variable: 'CAPW')]) {
+	withCredentials([string(credentialsId: 'docker-root-ca-password', variable: 'CAPW')]) {
             DOCKER_IMAGE = docker.build(DOCKER_IMAGE_NAME, 
 	      "${DOCKER_BUILD_ARGS} --build-arg CA_PASSWORD=${CAPW} ${DOCKER_ARGS} .")
 	}
