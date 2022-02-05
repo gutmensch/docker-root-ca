@@ -44,7 +44,7 @@ email_in_dn = no
 
 default_days	 = $ENV::SERVER_DAYS
 default_crl_days = 30			# how long before next CRL
-default_md	 = sha256 		# use public key default MD
+default_md	 = sha384 		# use public key default MD
 preserve	 = no			# keep passed DN ordering
 
 policy		 = policy_match
