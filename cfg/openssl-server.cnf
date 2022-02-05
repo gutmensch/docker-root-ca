@@ -2,7 +2,7 @@ HOME            = .
 
 ####################################################################
 [ req ]
-default_bits       = 4096
+default_bits       = $ENV::RSA_KEY_SIZE
 default_keyfile    = serverkey.pem
 distinguished_name = server_distinguished_name
 req_extensions     = server_req_extensions

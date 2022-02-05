@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM alpine:edge
 
 COPY cfg /
 
@@ -8,6 +8,7 @@ ARG CA_NAME="docker-root-ca"
 ARG CA_PASSWORD
 
 ARG SERVER_CFG="-config /openssl-server.cnf -batch"
+ARG RSA_KEY_SIZE=4096
 
 # 10.0.0.10:openldap,ldap 10.0.0.21:mysqldb,percona 10.0.0.22:mongodb [...]
 ARG SERVER_CERTS
@@ -20,45 +21,43 @@ RUN apk -U add bash openssl ca-certificates \
   && bash -c "mkdir -p {reqs,newcerts,certs,crl,private} 2>/dev/null || true; chmod 700 private" \
   && touch index.txt \
   \
+  # source helper functions for openssl date and server certs var parsing \
+  && source /helper.sh \
+  \
   # create CA request and Key \
   && openssl req $CA_CFG -new -keyout private/${CA_NAME}.key -out reqs/${CA_NAME}.csr \
   \
   # sign CA \
-  && openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -out certs/${CA_NAME}.crt \
-     -days 1825 -keyfile private/${CA_NAME}.key -selfsign -extensions v3_ca_has_san \
+  && openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -notext -out certs/${CA_NAME}.crt \
+     -days 3650 -keyfile private/${CA_NAME}.key -selfsign -extensions v3_ca_has_san \
      -infiles reqs/${CA_NAME}.csr \
   \
   # print capabilities of CA \
-  && openssl x509 -purpose -inform PEM < certs/${CA_NAME}.crt \
+  && openssl x509 -noout -purpose -inform PEM < certs/${CA_NAME}.crt \
   \
   # add root CA to cert store \
   && cat certs/${CA_NAME}.crt >> /etc/ssl/certs/ca-certificates.crt \
-  && update-ca-certificates \
+  && cp certs/${CA_NAME}.crt /etc/ssl/certs/ca-cert-${CA_NAME}.crt \
+  && ln -snf /etc/ssl/certs/ca-cert-${CA_NAME}.crt \
+     "/etc/ssl/certs/$(openssl x509 -noout -subject_hash < certs/${CA_NAME}.crt).0" \
   \
   # server certificates \
   && for s in $SERVER_CERTS; do \
-      ipv4=$(echo $s | cut -d: -f1); \
-      ipv6="${IPV6_PREFIX}$(echo $ipv4 | cut -d. -f4)"; \
-      hosts=$(echo $s | cut -d: -f2); \
-      san_list="IP.1: ${ipv4}, IP.2: ${ipv6}"; \
-      index=1; \
-      for i in $(echo $hosts | tr ',' ' '); do \
-          if [ $index -eq 1 ]; then \
-	      host=$i ; \
-	  fi; \
-          san_list="${san_list}, DNS.${index}: ${i}"; \
-          let index="${index} + 1"; \
-      done; \
-      \
-      # create server csr \
-      openssl req $SERVER_CFG -new -subj "/O=bln.space/OU=Docker Services/CN=${host}" -nodes \
-      -keyout private/${host}.key -out reqs/${host}.csr -addext "subjectAltName = ${san_list}"; \
-      \
-      # sign server csr \
-      openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -policy policy_server \
-      -extensions signing_req -in reqs/${host}.csr -out certs/${host}.crt; \
-      \
-      # print server cert \
-      openssl x509 -noout -text < certs/${host}.crt; \
-  done \
-  && find . -type f
+       host="$(get_cn $s)"; \
+       san_list="$(get_san $s $IPV6_PREFIX)"; \
+       \
+       # create server csr \
+       openssl req $SERVER_CFG -new -subj "/O=bln.space/OU=Docker Services/CN=${host}" -nodes \
+       -keyout private/${host}.key -out reqs/${host}.csr -addext "subjectAltName = ${san_list}"; \
+       \
+       # sign server csr \
+       openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -policy policy_server \
+       -extensions signing_req -in reqs/${host}.csr -out certs/${host}.crt; \
+       \
+       # print server cert \
+       openssl x509 -noout -text < certs/${host}.crt; \
+       \
+       # verify cert against cert store \
+       openssl verify -verbose certs/${host}.crt; \
+    done \
+  && find /CA -type f
