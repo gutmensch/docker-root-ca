@@ -5,9 +5,12 @@ COPY cfg /
 ARG CA_DIR="/CA"
 ARG CA_CFG="-config /openssl-ca.cnf -batch"
 ARG CA_NAME="docker-root-ca"
+ARG CA_DAYS=3650
 ARG CA_PASSWORD
 
 ARG SERVER_CFG="-config /openssl-server.cnf -batch"
+ARG SERVER_DAYS=720
+
 ARG RSA_KEY_SIZE=4096
 
 # 10.0.0.10:openldap,ldap 10.0.0.21:mysqldb,percona 10.0.0.22:mongodb [...]
@@ -29,17 +32,16 @@ RUN apk -U add bash openssl ca-certificates \
   \
   # sign CA \
   && openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -notext -out certs/${CA_NAME}.crt \
-     -days 3650 -keyfile private/${CA_NAME}.key -selfsign -extensions v3_ca_has_san \
+     -days $CA_DAYS -keyfile private/${CA_NAME}.key -selfsign -extensions v3_ca \
      -infiles reqs/${CA_NAME}.csr \
   \
   # print capabilities of CA \
   && openssl x509 -noout -purpose -inform PEM < certs/${CA_NAME}.crt \
+  && openssl x509 -noout -text -inform PEM < certs/${CA_NAME}.crt \
   \
   # add root CA to cert store \
-  && cat certs/${CA_NAME}.crt >> /etc/ssl/certs/ca-certificates.crt \
-  && cp certs/${CA_NAME}.crt /etc/ssl/certs/ca-cert-${CA_NAME}.crt \
-  && ln -snf /etc/ssl/certs/ca-cert-${CA_NAME}.crt \
-     "/etc/ssl/certs/$(openssl x509 -noout -subject_hash < certs/${CA_NAME}.crt).0" \
+  && cp certs/${CA_NAME}.crt /usr/local/share/ca-certificates/ \
+  && update-ca-certificates \
   \
   # server certificates \
   && for s in $SERVER_CERTS; do \

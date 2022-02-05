@@ -39,5 +39,6 @@ emailAddress_default            = postmaster@bln.space
 subjectKeyIdentifier            = hash
 basicConstraints                = CA:FALSE
 keyUsage                        = digitalSignature, keyEncipherment
+# will be added on cmd line with specific values
 # subjectAltName                  = @alternate_names
 nsComment                       = "OpenSSL Generated Certificate"

@@ -42,12 +42,12 @@ copy_extensions = copy
 email_in_dn = no
 # crl_extensions	= crl_ext
 
-default_days	= 720
-default_crl_days= 30			# how long before next CRL
-default_md	= sha256 		# use public key default MD
-preserve	= no			# keep passed DN ordering
+default_days	 = $ENV::SERVER_DAYS
+default_crl_days = 30			# how long before next CRL
+default_md	 = sha256 		# use public key default MD
+preserve	 = no			# keep passed DN ordering
 
-policy		= policy_match
+policy		 = policy_match
 
 # For the CA policy
 [ policy_match ]
@@ -102,6 +102,10 @@ commonName			= Signing CA
 commonName_default		= Local Root CA
 commonName_max			= 64
 
+#emailAddress			= CA mail address
+#emailAddress_default		= postmaster@bln.space
+
+
 # SET-ex3			= SET extension number 3
 
 [ req_attributes ]
@@ -111,24 +115,11 @@ challengePassword_max		= 20
 
 unstructuredName		= An optional company name
 
-[ v3_req ]
-basicConstraints       = CA:FALSE
-keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName         = email:move
-crlDistributionPoints  = URI:http://front/$ENV::CA_NAME/ca.crl
-
 [ v3_ca ]
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always,issuer
 basicConstraints       = critical,CA:true
 subjectAltName         = email:move
-crlDistributionPoints  = URI:http://front/$ENV::CA_NAME/ca.crl
-keyUsage               = keyCertSign, cRLSign
-
-[ v3_ca_has_san ]
-subjectKeyIdentifier   = hash
-authorityKeyIdentifier = keyid:always,issuer
-basicConstraints       = critical,CA:true
 crlDistributionPoints  = URI:http://front/$ENV::CA_NAME/ca.crl
 keyUsage               = keyCertSign, cRLSign
 
@@ -139,5 +130,5 @@ authorityKeyIdentifier = keyid:always
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid,issuer
 basicConstraints       = CA:FALSE
-keyUsage               = digitalSignature, keyEncipherment
+keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
 crlDistributionPoints  = URI:http://front/$ENV::CA_NAME/ca.crl
