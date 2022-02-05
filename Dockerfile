@@ -27,6 +27,9 @@ RUN apk -U add bash openssl ca-certificates \
   # source helper functions for openssl date and server certs var parsing \
   && source /helper.sh \
   \
+  # create dhparams for tls configs which support it \
+  && openssl dhparam -out certs/dhparams.pem 4096 \
+  \
   # create CA request and Key \
   && openssl req $CA_CFG -new -keyout private/${CA_NAME}.key -out reqs/${CA_NAME}.csr \
   && chmod 400 private/${CA_NAME}.key \
@@ -64,7 +67,8 @@ RUN apk -U add bash openssl ca-certificates \
        # verify cert against cert store \
        openssl verify -verbose certs/$host/server.crt; \
        \
-       # copy root ca and bundle to host dir for easier copy later \
+       # copy dhparams, root ca and bundle to host dir for easier copy later \
+       cp certs/dhparams.pem certs/$host/; \
        cp certs/$CA_NAME.crt certs/$host/ca.crt; \
        cp /etc/ssl/certs/ca-certificates.crt certs/$host/ca-bundle.crt; \
     done \
