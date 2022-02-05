@@ -29,6 +29,7 @@ RUN apk -U add bash openssl ca-certificates \
   \
   # create CA request and Key \
   && openssl req $CA_CFG -new -keyout private/${CA_NAME}.key -out reqs/${CA_NAME}.csr \
+  && chmod 400 private/${CA_NAME}.key \
   \
   # sign CA \
   && openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -notext -out certs/${CA_NAME}.crt \
