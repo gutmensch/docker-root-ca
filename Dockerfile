@@ -48,19 +48,24 @@ RUN apk -U add bash openssl ca-certificates \
   && for s in $SERVER_CERTS; do \
        host="$(get_cn $s)"; \
        san_list="$(get_san $s $IPV6_PREFIX)"; \
+       mkdir certs/$host; \
        \
        # create server csr \
        openssl req $SERVER_CFG -new -subj "/O=bln.space/OU=Docker Services/CN=${host}" -nodes \
-       -keyout private/${host}.key -out reqs/${host}.csr -addext "subjectAltName = ${san_list}"; \
+       -keyout certs/$host/server.key -out reqs/$host.csr -addext "subjectAltName = ${san_list}"; \
        \
        # sign server csr \
        openssl ca $CA_CFG -create_serial -passin pass:$CA_PASSWORD -policy policy_server \
-       -extensions signing_req -in reqs/${host}.csr -out certs/${host}.crt; \
+       -extensions signing_req -in reqs/$host.csr -out certs/$host/server.crt; \
        \
        # print server cert \
-       openssl x509 -noout -text < certs/${host}.crt; \
+       openssl x509 -noout -text < certs/$host/server.crt; \
        \
        # verify cert against cert store \
-       openssl verify -verbose certs/${host}.crt; \
+       openssl verify -verbose certs/$host/server.crt; \
+       \
+       # copy root ca and bundle to host dir for easier copy later \
+       cp certs/$CA_NAME.crt certs/$host/ca.crt; \
+       cp /etc/ssl/certs/ca-certificates.crt certs/$host/ca-bundle.crt; \
     done \
   && find /CA -type f
