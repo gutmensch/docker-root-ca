@@ -68,8 +68,16 @@ RUN apk -U add bash openssl ca-certificates \
        openssl verify -verbose certs/$host/server.crt; \
        \
        # copy dhparams, root ca and bundle to host dir for easier copy later \
+       # copy setup.sh too to make easier for images to adopt root CA and server cert \
        cp certs/dhparams.pem certs/$host/; \
        cp certs/$CA_NAME.crt certs/$host/ca.crt; \
        cp /etc/ssl/certs/ca-certificates.crt certs/$host/ca-bundle.crt; \
+       cp /setup.sh certs/$host/setup.sh; \
     done \
+  # common directory for images without server cert but with CA setup \
+  && mkdir certs/common \
+  && cp certs/dhparams.pem certs/common/ \
+  && cp certs/$CA_NAME.crt certs/common/ca.crt \
+  && cp /etc/ssl/certs/ca-certificates.crt certs/common/ca-bundle.crt \
+  && cp /setup.sh certs/common/ \
   && find /CA -type f
