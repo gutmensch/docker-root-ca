@@ -16,7 +16,7 @@ add_ca() {
 
 add_ca_redhat() {
     yum update || true
-    yum install ca-certificates || true
+    yum install ca-certificates openssl || true
     ln -svf $PWD/ca.crt /etc/pki/ca-trust/source/anchors/docker_root_ca.crt
     update-ca-trust extract
     verify_cert ca
@@ -24,7 +24,7 @@ add_ca_redhat() {
 
 add_ca_debian() {
     apt update || true
-    apt install ca-certificates || true
+    apt install ca-certificates openssl || true
     ln -svf $PWD/ca.crt /usr/local/share/ca-certificates/docker_root_ca.crt
     update-ca-certificates
     verify_cert ca
@@ -32,7 +32,7 @@ add_ca_debian() {
 }
 
 add_ca_alpine() {
-    apk -U add ca-certificates || true
+    apk -U add ca-certificates openssl || true
     ln -svf $PWD/ca.crt /usr/local/share/ca-certificates/docker_root_ca.crt
     update-ca-certificates
     verify_cert ca
@@ -60,7 +60,7 @@ add_server_cert() {
 }
 
 verify_cert() {
-    openssl verify -verbose $PWD/$1.crt
+    openssl verify -verbose $PWD/$1.crt || echo "could not verify cert without openssl, continuing"
 }
 
 # start script
