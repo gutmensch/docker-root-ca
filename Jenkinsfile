@@ -10,7 +10,9 @@ CERTS             = '10.0.0.10:ldap,openldap ' +
 		    '10.0.0.22:mongodb ' +
 		    '10.0.0.23:redis ' +
 		    '10.0.0.24:memcached ' +
-		    '10.0.0.51:loki'
+		    '10.0.0.51:loki ' +
+		    '10.0.0.101:roundcube'
+
 PREFIX            = 'fd00:dead:beef:1::'
 
 DOCKER_BUILD_ARGS = "--no-cache --build-arg SERVER_CERTS=\"${CERTS}\" --build-arg IPV6_PREFIX=${PREFIX}"
